@@ -1,4 +1,4 @@
-import ReactDOM from "react-dom";
+import ReactDOM from "./react/react-dom";
 import React from "./react";
 // import React from "react";
 
@@ -13,9 +13,10 @@ const ele1 = React.createElement(
   "h2",
   { className: "title", style: { color: "red" } },
   "this is h2",
-  React.createElement("span", null, "this is span")
+  React.createElement("p", { style: { color: "green" } }, "this is p")
 );
 // console.dir(ele, {depth: 0})
 console.log(ele1);
 
-// ReactDOM.render(ele1, document.getElementById("root"));
+// 把虚拟DOM 变成真实DOM并插入到 root
+ReactDOM.render(ele1, document.getElementById("root"));
