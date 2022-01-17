@@ -3,6 +3,8 @@ import { wrapToVdom } from "./utils";
 function createElement(type, config, children) {
   let ref, key;
   if(config) {
+    delete config.__source
+    delete config.__self
     ref = config.ref // 用来引用真实DOM元素
     key = config.key // 进行DOM-DIFF 优化，用来唯一标识某个子元素
     delete config.ref

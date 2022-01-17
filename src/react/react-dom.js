@@ -11,10 +11,19 @@ function render(vdom, container) {
 
 function mount(vdom, parentDOM) {
   // 1. 把虚拟DOM变成真实DOM
-
   let newDOM = createDOM(vdom);
   // 2. 把真实DOM追加到容器上
   parentDOM.appendChild(newDOM);
+}
+
+/**
+ * 挂在函数组件
+ *
+ */
+function mountFunctionComponent(vdom) {
+  let { type: functionComponent, props } = vdom;
+  let renderVdom = functionComponent(props); // 执行函数 - 获取组件将要渲染的虚拟dom
+  return createDOM(renderVdom);
 }
 
 /**
@@ -28,9 +37,11 @@ function createDOM(vdom) {
   if (type === REACT_TEXT) {
     // 文本节点
     dom = document.createTextNode(props.content);
-  } else {
+  } else if (typeof type === "string") {
     // DOM 节点
     dom = document.createElement(type);
+  } else if (typeof type === "function") {
+    return mountFunctionComponent(vdom);
   }
   if (props) {
     // 更新dom属性
