@@ -26,6 +26,13 @@ function mountFunctionComponent(vdom) {
   return createDOM(renderVdom);
 }
 
+function mountClassComponent(vdom) {
+  let {type:ClassComponent, props} = vdom
+  let classInstance = new ClassComponent(props)
+  let renderVdom = classInstance.render()
+  return createDOM(renderVdom)   
+}
+
 /**
  * 把虚拟DOM变成真实DOM
  * @param {*} vdom 虚拟DOM React元素
@@ -41,7 +48,13 @@ function createDOM(vdom) {
     // DOM 节点
     dom = document.createElement(type);
   } else if (typeof type === "function") {
-    return mountFunctionComponent(vdom);
+    // 
+    if(type.isReactComponent) { // 类组件
+      return mountClassComponent(vdom)
+    } else {
+      return mountFunctionComponent(vdom);
+    }
+    
   }
   if (props) {
     // 更新dom属性

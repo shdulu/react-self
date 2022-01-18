@@ -18,17 +18,16 @@ import React from "./react";
 // );
 // console.log(ele1);
 
- 
 /**
  * 函数组件是一个普通的函数
  * 1. 接收一个props属性对象作为参数，且仅能返回一个React元素
  * 2. 组件名称首字符必须大写， React通过首字符是否大写来判断是否为原生DOM节点
  * 3. 组件需要先定义在使用
  * @param {*} props
- * @return {*} 
+ * @return {*}
  */
 function FunctionComponent(props) {
-  // return React.createElement('div', {}, '999999')  
+  // return React.createElement('div', {}, '999999')
   return (
     <div className="title" style={{ color: "red" }}>
       {props.name} Hello world!
@@ -36,7 +35,20 @@ function FunctionComponent(props) {
   );
 }
 const ele2 = <FunctionComponent name="shdulu"></FunctionComponent>;
-console.log('ele2', ele2)
+console.log("ele2", ele2);
+
+// 类组件
+class ClassComponent extends React.Component {
+  render() {
+    return (
+      <div className="title" style={{ color: "red" }}>
+        hello
+        <p style={{ fontSize: '20px', color: "green" }}>{this.props.name}</p>
+      </div>
+    );
+  }
+}
+const ele3 = <ClassComponent name="class-com" />;
 
 // 把虚拟DOM 变成真实DOM并插入到 root
-ReactDOM.render(ele2, document.getElementById("root"));
+ReactDOM.render(ele3, document.getElementById("root"));
