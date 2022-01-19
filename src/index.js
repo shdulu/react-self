@@ -39,11 +39,29 @@ console.log("ele2", ele2);
 
 // 类组件
 class ClassComponent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { number: 0 };
+  }
+  handleClick = () => {
+    this.setState({
+      number: this.state.number + 1,
+    });
+    this.setState((state) => ({ number: state.number + 1 }));
+    console.log(this.state.number);
+    this.setState({
+      number: this.state.number + 1,
+    });
+    console.log(this.state.number);
+  };
   render() {
     return (
       <div className="title" style={{ color: "red" }}>
         hello
-        <p style={{ fontSize: '20px', color: "green" }}>{this.props.name}</p>
+        <p style={{ fontSize: "20px", color: "green" }}>{this.props.name}</p>
+        <hr />
+        <button onClick={this.handleClick}>+1</button>
+        <p>number：{this.state.number}</p>
       </div>
     );
   }

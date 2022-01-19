@@ -27,10 +27,11 @@ function mountFunctionComponent(vdom) {
 }
 
 function mountClassComponent(vdom) {
-  let {type:ClassComponent, props} = vdom
-  let classInstance = new ClassComponent(props)
-  let renderVdom = classInstance.render()
-  return createDOM(renderVdom)   
+  let { type: ClassComponent, props } = vdom;
+  let classInstance = new ClassComponent(props);
+  let renderVdom = classInstance.render();
+  classInstance.oldRenderVdom = renderVdom;
+  return createDOM(renderVdom);
 }
 
 /**
@@ -48,13 +49,13 @@ function createDOM(vdom) {
     // DOM 节点
     dom = document.createElement(type);
   } else if (typeof type === "function") {
-    // 
-    if(type.isReactComponent) { // 类组件
-      return mountClassComponent(vdom)
+    //
+    if (type.isReactComponent) {
+      // 类组件
+      return mountClassComponent(vdom);
     } else {
       return mountFunctionComponent(vdom);
     }
-    
   }
   if (props) {
     // 更新dom属性
@@ -87,6 +88,10 @@ function updateProps(dom, oldProps, newProps) {
       for (let attr in styleObj) {
         dom.style[attr] = styleObj[attr];
       }
+    } else if (key.startsWith("on")) {
+      // 事件处理函数
+      // dom.onclick = 函数
+      dom[key.toLocaleLowerCase()] = newProps[key];
     } else {
       dom[key] = newProps[key];
     }
@@ -97,6 +102,12 @@ function updateProps(dom, oldProps, newProps) {
       dom[key] = null;
     }
   }
+}
+
+export function compareTwoVdom(parentDOM, oldVdom, newVdom) {
+  let oldDOM = oldVdom.dom;
+  let newDOM = createDOM(newVdom);
+  parentDOM.replaceChild(newDOM, oldDOM);
 }
 
 const ReactDOM = {
