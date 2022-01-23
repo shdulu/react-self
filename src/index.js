@@ -1,5 +1,6 @@
 import ReactDOM from "./react/react-dom";
 import React from "./react";
+
 // import React from "react";
 // import ReactDOM from "react-dom";
 
@@ -23,6 +24,9 @@ import React from "./react";
  * 1. 接收一个props属性对象作为参数，且仅能返回一个React元素
  * 2. 组件名称首字符必须大写， React通过首字符是否大写来判断是否为原生DOM节点
  * 3. 组件需要先定义在使用
+ *
+ * 在React能够管理的范围内比如事件函数，比如说生命周期函数里面都是异步的，批量，除此之外像setTimeout
+ * 原生事件里都是同步的
  * @param {*} props
  * @return {*}
  */
@@ -43,20 +47,33 @@ class ClassComponent extends React.Component {
     super(props);
     this.state = { number: 0 };
   }
-  handleClick = () => {
-    this.setState({
-      number: this.state.number + 1,
-    });
-    this.setState((state) => ({ number: state.number + 1 }));
-    console.log(this.state.number);
+  handleClick = (event) => {
+    console.log(event)
     this.setState({
       number: this.state.number + 1,
     });
     console.log(this.state.number);
+    this.setState({
+      number: this.state.number + 1,
+    });
+    console.log(this.state.number);
+    setTimeout(() => {
+      this.setState({
+        number: this.state.number + 1,
+      });
+      console.log(this.state.number);
+      this.setState({
+        number: this.state.number + 1,
+      });
+      console.log(this.state.number);
+    });
   };
+  handlePClick = () => {
+    console.log('handlePClick........')
+  }
   render() {
     return (
-      <div className="title" style={{ color: "red" }}>
+      <div className="title" style={{ color: "red" }} onClick={this.handlePClick}>
         hello
         <p style={{ fontSize: "20px", color: "green" }}>{this.props.name}</p>
         <hr />

@@ -1,4 +1,5 @@
 import { REACT_TEXT } from "./constants";
+import { addEvent } from "./event";
 
 /**
  *
@@ -88,10 +89,13 @@ function updateProps(dom, oldProps, newProps) {
       for (let attr in styleObj) {
         dom.style[attr] = styleObj[attr];
       }
-    } else if (key.startsWith("on")) {
-      // 事件处理函数
+    } else if (/^on[A-Z].*/.test(key)) {
+      // 绑定事件处理函数
       // dom.onclick = 函数
-      dom[key.toLocaleLowerCase()] = newProps[key];
+      // dom[key.toLocaleLowerCase()] = newProps[key]; 不能用这种方式绑定事件 - 需要使用代理中间执行逻辑
+      // 不在把事件函数绑定到对应的DOM上，而是进行事件委托，全部委托到document上
+      // AOP 做事件委托, 可以对事件拦截
+      addEvent(dom, key.toLocaleLowerCase(), newProps[key]);
     } else {
       dom[key] = newProps[key];
     }

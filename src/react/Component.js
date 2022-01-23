@@ -1,4 +1,14 @@
 import { compareTwoVdom } from "./react-dom";
+export let updateQueue = {
+  isBatchingUpdate: false, // 控制更新时同步还是异步的
+  updaters: [], // 更新的数据队列 - 存放 Updater实例
+  batchUpdate() {
+    // 批量更新
+    updateQueue.updaters.forEach((updater) => updater.updateComponent()); // 批量更新
+    updateQueue.isBatchingUpdate = false; // 设置批量更新标识符
+    updateQueue.updaters.length = 0; // 清空队列
+  },
+};
 class Updater {
   constructor(classInstance) {
     this.classInstance = classInstance;
@@ -9,7 +19,12 @@ class Updater {
     this.emitUpdate();
   }
   emitUpdate() {
-    this.updateComponent();
+    if (updateQueue.isBatchingUpdate) {
+      // 当前处于批量更新模式 - 把当前的更新实例存到更新队列
+      updateQueue.updaters.push(this); 
+    } else {
+      this.updateComponent();
+    }
   }
   updateComponent() {
     let { classInstance, penddingStates } = this;
