@@ -1,4 +1,4 @@
-import { compareTwoVdom } from "./react-dom";
+import { compareTwoVdom, findDOM } from "./react-dom";
 export let updateQueue = {
   isBatchingUpdate: false, // 控制更新时同步还是异步的
   updaters: [], // 更新的数据队列 - 存放 Updater实例
@@ -63,7 +63,7 @@ class Component {
   }
   forceUpdate() {
     let oldRenderVdom = this.oldRenderVdom; // 获取老的虚拟DOM
-    let oldDOM = oldRenderVdom.dom; // 获取老的真实DOM
+    let oldDOM = findDOM(oldRenderVdom); // 获取老的真实DOM
     let newRenderVdom = this.render();
     compareTwoVdom(oldDOM.parentNode, oldRenderVdom, newRenderVdom);
     this.oldRenderVdom = newRenderVdom;

@@ -1,4 +1,4 @@
-import { REACT_TEXT } from "./constants";
+import { REACT_TEXT, REACT_FORWARD_REF } from "./constants";
 import { addEvent } from "./event";
 
 /**
@@ -28,10 +28,18 @@ function mountFunctionComponent(vdom) {
 }
 
 function mountClassComponent(vdom) {
-  let { type: ClassComponent, props } = vdom;
+  let { type: ClassComponent, props, ref } = vdom;
   let classInstance = new ClassComponent(props);
+  if (ref) ref.current = classInstance;
   let renderVdom = classInstance.render();
-  classInstance.oldRenderVdom = renderVdom;
+  vdom.oldRenderVdom = classInstance.oldRenderVdom = renderVdom;
+  return createDOM(renderVdom);
+}
+
+function mountForwardComponent(vdom) {
+  debugger;
+  let { type, ref, props } = vdom;
+  let renderVdom = type.render(props, ref);
   return createDOM(renderVdom);
 }
 
@@ -41,8 +49,11 @@ function mountClassComponent(vdom) {
  * @return 真实DOM
  */
 function createDOM(vdom) {
-  let { type, props } = vdom;
+  let { type, props, ref } = vdom;
   let dom;
+  if (type && type.$$typeof === REACT_FORWARD_REF) {
+    return mountForwardComponent(vdom);
+  }
   if (type === REACT_TEXT) {
     // 文本节点
     dom = document.createTextNode(props.content);
@@ -71,6 +82,7 @@ function createDOM(vdom) {
     }
   }
   vdom.dom = dom; // 在虚拟dom上挂一个dom属性指向虚拟对应的真实dom
+  if (ref) ref.current = dom; // ref有值 ref的current属性指向真实dom
   return dom;
 }
 
@@ -113,7 +125,15 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom) {
   let newDOM = createDOM(newVdom);
   parentDOM.replaceChild(newDOM, oldDOM);
 }
-
+export function findDOM(vdom) {
+  if (!vdom) return null;
+  if (vdom.dom) {
+    // 如果它身上有dom属性，那说明这个vdom是一个原生组件的虚拟dom.它会有dom属性指向真实dom，直接返回
+    return vdom.dom;
+  } else {
+    return findDOM(vdom.oldRenderVdom);
+  }
+}
 const ReactDOM = {
   render,
 };
