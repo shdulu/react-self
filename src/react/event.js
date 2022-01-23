@@ -19,7 +19,6 @@ export function addEvent(dom, eventType, handler) {
   // 虽然没有给每个子DOM绑定事件，但是事件处理函数还是保存在子DOM上
   store[eventType] = handler; // dom.store['onclick'] = handlerClick
   // 从17开始，我们不再把事件委托给document. 而是委托给容器了 div#root
-
   if (!document[eventType]) {
     document[eventType] = dispatchEvent;
   }
@@ -40,6 +39,10 @@ function dispatchEvent(event) {
     let { store } = target;
     let handler = store && store[eventType];
     handler && handler(syntheticEvent); // handler①
+    // 在执行handler 的过程中可能会阻止冒泡
+    if (!syntheticEvent.isPropagationStopped) {
+      break;
+    }
     target = target.parentNode; // 向上冒泡
   }
 
@@ -62,6 +65,8 @@ function createSyntheticEvent(nativeEvent) {
   syntheticEvent.nativeEvent = nativeEvent;
   syntheticEvent.preventDefault = preventDefault;
   syntheticEvent.stopPropagation = stopPropagation;
+  syntheticEvent.isDefaultPrevented = false;
+  syntheticEvent.isPropagationStopped = false;
   return syntheticEvent;
 }
 
@@ -77,13 +82,17 @@ function preventDefault(event) {
   if (event.preventDefault) {
     event.preventDefault();
   }
+  this.isDefaultPrevented = true;
 }
 
-function stopPropagation(event) {
+function stopPropagation() {
+  const event = this.nativeEvent
+  // 阻止原生冒泡
   if (event.stopPropagation) {
     event.stopPropagation();
   } else {
     // IE
     event.cancelBubble = true;
   }
+  this.isPropagationStopped = true;
 }

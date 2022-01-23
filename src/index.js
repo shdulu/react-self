@@ -11,13 +11,6 @@ import React from "./react";
  * jsx 编译成createElement 是在webpack编译的时候，也就是打包的时候执行
  * 打包后的代码在浏览器里执行，会执行函数
  */
-// const ele1 = React.createElement(
-//   "h2",
-//   { className: "title", style: { color: "red" } },
-//   "this is h2",
-//   React.createElement("p", { style: { color: "green" } }, "this is p")
-// );
-// console.log(ele1);
 
 /**
  * 函数组件是一个普通的函数
@@ -27,11 +20,8 @@ import React from "./react";
  *
  * 在React能够管理的范围内比如事件函数，比如说生命周期函数里面都是异步的，批量，除此之外像setTimeout
  * 原生事件里都是同步的
- * @param {*} props
- * @return {*}
  */
 function FunctionComponent(props) {
-  // return React.createElement('div', {}, '999999')
   return (
     <div className="title" style={{ color: "red" }}>
       {props.name} Hello world!
@@ -48,6 +38,7 @@ class ClassComponent extends React.Component {
     this.state = { number: 0 };
   }
   handleClick = (event) => {
+    debugger
     console.log(event)
     this.setState({
       number: this.state.number + 1,
