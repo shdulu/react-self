@@ -21,15 +21,15 @@ class Updater {
   emitUpdate() {
     if (updateQueue.isBatchingUpdate) {
       // 当前处于批量更新模式 - 把当前的更新实例存到更新队列
-      updateQueue.updaters.push(this); 
+      updateQueue.updaters.push(this);
     } else {
       this.updateComponent();
     }
   }
   updateComponent() {
-    let { classInstance, penddingStates } = this;
+    let { nextProps, classInstance, penddingStates } = this;
     if (penddingStates.length > 0) {
-      shouldUpdate(classInstance, this.getState());
+      shouldUpdate(classInstance, nextProps, this.getState());
     }
   }
   // 基于老状态和penddingStates获取新状态
@@ -46,9 +46,21 @@ class Updater {
     return state;
   }
 }
-function shouldUpdate(classInstance, nextState) {
-  classInstance.state = nextState; // 先把新状态赋给类的实例的this.state 上去
-  classInstance.forceUpdate(); // 让类的实例强行更新
+function shouldUpdate(classInstance, nextProps, nextState) {
+  let willUpdate = true;
+  if (
+    classInstance.shouldComponentUpdate &&
+    !classInstance.shouldComponentUpdate(nextProps, nextState)
+  ) {
+    willUpdate = false;
+  }
+  if (willUpdate && classInstance.componentWillUpdate) {
+    classInstance.componentWillUpdate();
+  }
+  classInstance.state = nextState; // 先把新状态赋给类的实例的this.state 上去, 不管要不要更新赋值都要执行
+  if (willUpdate) {
+    classInstance.forceUpdate(); // 让类的实例强行更新
+  }
 }
 
 class Component {
@@ -67,6 +79,9 @@ class Component {
     let newRenderVdom = this.render();
     compareTwoVdom(oldDOM.parentNode, oldRenderVdom, newRenderVdom);
     this.oldRenderVdom = newRenderVdom;
+    if (this.componentDidUpdate) {
+      this.componentDidUpdate(this.props, this.state);
+    }
   }
 }
 

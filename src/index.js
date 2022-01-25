@@ -1,7 +1,7 @@
 import ReactDOM from "./react/react-dom";
 import React from "./react";
 
-import App from './study/07-function-ref'
+import App from './study/07-life'
 
 
 

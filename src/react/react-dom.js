@@ -15,6 +15,9 @@ function mount(vdom, parentDOM) {
   let newDOM = createDOM(vdom);
   // 2. 把真实DOM追加到容器上
   parentDOM.appendChild(newDOM);
+  if (newDOM.componentDidMount) {
+    newDOM.componentDidMount();
+  }
 }
 
 /**
@@ -24,6 +27,7 @@ function mount(vdom, parentDOM) {
 function mountFunctionComponent(vdom) {
   let { type: functionComponent, props } = vdom;
   let renderVdom = functionComponent(props); // 执行函数 - 获取组件将要渲染的虚拟dom
+  vdom.oldRenderVdom = renderVdom;
   return createDOM(renderVdom);
 }
 
@@ -31,9 +35,16 @@ function mountClassComponent(vdom) {
   let { type: ClassComponent, props, ref } = vdom;
   let classInstance = new ClassComponent(props);
   if (ref) ref.current = classInstance;
+  if (classInstance.componentWillMount) {
+    classInstance.componentWillMount();
+  }
   let renderVdom = classInstance.render();
   vdom.oldRenderVdom = classInstance.oldRenderVdom = renderVdom;
-  return createDOM(renderVdom);
+  let dom = createDOM(renderVdom);
+  if (classInstance.componentDidMount) {
+    dom.componentDidMount = classInstance.componentDidMount;
+  }
+  return dom;
 }
 
 function mountForwardComponent(vdom) {
@@ -121,7 +132,7 @@ function updateProps(dom, oldProps, newProps) {
 }
 
 export function compareTwoVdom(parentDOM, oldVdom, newVdom) {
-  let oldDOM = oldVdom.dom;
+  let oldDOM = findDOM(oldVdom);
   let newDOM = createDOM(newVdom);
   parentDOM.replaceChild(newDOM, oldDOM);
 }
