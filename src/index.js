@@ -1,6 +1,9 @@
 import ReactDOM from "./react/react-dom";
 import React from "./react";
 
+// import ReactDOM from "react-dom";
+// import React from "react";
+
 import App from './study/07-life'
 
 

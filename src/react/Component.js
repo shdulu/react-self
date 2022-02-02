@@ -18,7 +18,8 @@ class Updater {
     this.penddingStates.push(partialState);
     this.emitUpdate();
   }
-  emitUpdate() {
+  emitUpdate(nextProps) {
+    this.nextProps = nextProps;
     if (updateQueue.isBatchingUpdate) {
       // 当前处于批量更新模式 - 把当前的更新实例存到更新队列
       updateQueue.updaters.push(this);
@@ -28,7 +29,8 @@ class Updater {
   }
   updateComponent() {
     let { nextProps, classInstance, penddingStates } = this;
-    if (penddingStates.length > 0) {
+    // 如果属性更新了或者状态变化了都会更新
+    if (nextProps || penddingStates.length > 0) {
       shouldUpdate(classInstance, nextProps, this.getState());
     }
   }
@@ -48,6 +50,7 @@ class Updater {
 }
 function shouldUpdate(classInstance, nextProps, nextState) {
   let willUpdate = true;
+  // 如果有shouldComponentUpdate方法，并且shouldComponentUpdate执行结果是false
   if (
     classInstance.shouldComponentUpdate &&
     !classInstance.shouldComponentUpdate(nextProps, nextState)
@@ -56,6 +59,9 @@ function shouldUpdate(classInstance, nextProps, nextState) {
   }
   if (willUpdate && classInstance.componentWillUpdate) {
     classInstance.componentWillUpdate();
+  }
+  if (nextProps) {
+    classInstance.props = nextProps;
   }
   classInstance.state = nextState; // 先把新状态赋给类的实例的this.state 上去, 不管要不要更新赋值都要执行
   if (willUpdate) {
@@ -77,6 +83,7 @@ class Component {
     let oldRenderVdom = this.oldRenderVdom; // 获取老的虚拟DOM
     let oldDOM = findDOM(oldRenderVdom); // 获取老的真实DOM
     let newRenderVdom = this.render();
+    // 此处的逻辑其实就是DOM-DIFF的逻辑 !!!
     compareTwoVdom(oldDOM.parentNode, oldRenderVdom, newRenderVdom);
     this.oldRenderVdom = newRenderVdom;
     if (this.componentDidUpdate) {

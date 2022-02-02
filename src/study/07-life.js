@@ -1,5 +1,5 @@
 import React from "../react";
-
+import ChildCounter from "./ChildCounter";
 class Counter extends React.Component {
   constructor(props) {
     super(props);
@@ -33,6 +33,9 @@ class Counter extends React.Component {
     return (
       <div>
         <p>{this.state.number}</p>
+        {this.state.number === 4 ? null : (
+          <ChildCounter count={this.state.number}></ChildCounter>
+        )}
         <button onClick={this.handleClick}>+</button>
       </div>
     );
