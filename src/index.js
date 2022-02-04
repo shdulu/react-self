@@ -4,7 +4,7 @@ import React from "./react";
 // import ReactDOM from "react-dom";
 // import React from "react";
 
-import App from './study/10.dom-diff'
+import App from './study/07-life'
 
 
 

@@ -82,12 +82,25 @@ class Component {
   forceUpdate() {
     let oldRenderVdom = this.oldRenderVdom; // 获取老的虚拟DOM
     let oldDOM = findDOM(oldRenderVdom); // 获取老的真实DOM
+    if (this.constructor.getDerivedStateFromProps) {
+      // 如果存在类的静态方法 getDerivedStateFromProps
+      // 类的静态方式防止在getDerivedStateFromProps生命周期调用 this.setState 造成死循环
+      // 把getDerivedStateFromProps 返回值和state合并
+      let newState = this.constructor.getDerivedStateFromProps(
+        this.props,
+        this.state
+      );
+      if (newState) {
+        this.state = { ...this.state, ...newState };
+      }
+    }
     let newRenderVdom = this.render();
+    let snapshot = this.getSnapshotBeforeUpdate&&this.getSnapshotBeforeUpdate()
     // 此处的逻辑其实就是DOM-DIFF的逻辑 !!!
     compareTwoVdom(oldDOM.parentNode, oldRenderVdom, newRenderVdom);
     this.oldRenderVdom = newRenderVdom;
     if (this.componentDidUpdate) {
-      this.componentDidUpdate(this.props, this.state);
+      this.componentDidUpdate(this.props, this.state, snapshot);
     }
   }
 }

@@ -6,6 +6,7 @@ class Counter extends React.Component {
     this.state = { number: 0 };
     console.log("constructor......", 1);
   }
+  
   componentWillMount() {
     console.log("componentWillMount......", 2);
   }
