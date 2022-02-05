@@ -12,10 +12,10 @@
     "react-scripts": "4.0.3"
   },
   "scripts": {
-    "start": "cross-env DISABLE_NEW_JSX_TRANSFORM=true react-scripts start",
-    "build": "cross-env NODE_ENV=development react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "cross-env DISABLE_NEW_JSX_TRANSFORM=true react-app-rewired start",
+    "build": "cross-env DISABLE_NEW_JSX_TRANSFORM=true react-app-rewired build",
+    "test": "cross-env DISABLE_NEW_JSX_TRANSFORM=true react-app-rewired test",
+    "eject": "cross-env DISABLE_NEW_JSX_TRANSFORM=true react-app-rewired eject"
   },
   "eslintConfig": {
     "extends": [
@@ -34,5 +34,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.17.0",
+    "customize-cra": "^1.0.0",
+    "react-app-rewired": "^2.1.11"
   }
 }

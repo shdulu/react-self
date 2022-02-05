@@ -4,9 +4,7 @@ import React from "./react";
 // import ReactDOM from "react-dom";
 // import React from "react";
 
-import App from './study/12-context'
-
-
+import App from "./study/13-反向继承";
 
 // 把虚拟DOM 变成真实DOM并插入到 root
-ReactDOM.render(<App/>, document.getElementById("root"));
+ReactDOM.render(<App title="按钮的标题" />, document.getElementById("root"));
