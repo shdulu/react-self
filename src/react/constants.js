@@ -5,3 +5,5 @@ export const REACT_TEXT = Symbol("react.text");
 export const PLACEMENT = Symbol("PLACEMENT");
 // 移动节点
 export const MOVE = Symbol("MOVE");
+export const REACT_CONTEXT = Symbol("react.context");
+export const REACT_PROVIDER = Symbol("react.provider");

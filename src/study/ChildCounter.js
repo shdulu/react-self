@@ -2,18 +2,7 @@ import React from "../react";
 class ChildCounter extends React.Component {
   constructor(props) {
     super(props)
-    this.state= {
-      number: 0
-    }
     console.log("ChildCounter 1.constructor");
-  }
-  static getDerivedStateFromProps(nextProps, nextState) {
-    const { count } = nextProps;
-    if (count % 2 === 0) {
-      return { number: count * 2 };
-    } else {
-      return { number: count * 3 };
-    }
   }
   componentWillReceiveProps(newProps) {
     console.log("ChildCounter 5.componentWillReceiveProps");
@@ -27,7 +16,6 @@ class ChildCounter extends React.Component {
       <div>
         this is ChildCounter
         <p>count: {this.props.count}</p>
-        <p>number: {this.state.number}</p>
       </div>
     );
   }

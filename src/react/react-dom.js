@@ -1,4 +1,11 @@
-import { REACT_TEXT, REACT_FORWARD_REF, MOVE, PLACEMENT } from "./constants";
+import {
+  REACT_TEXT,
+  REACT_FORWARD_REF,
+  MOVE,
+  PLACEMENT,
+  REACT_PROVIDER,
+  REACT_CONTEXT,
+} from "./constants";
 import { addEvent } from "./event";
 
 /**
@@ -35,6 +42,10 @@ function mountClassComponent(vdom) {
   let { type: ClassComponent, props, ref } = vdom;
   // 把类组件的属性传递给了类组件的构造函数
   let classInstance = new ClassComponent(props); // 创建类组件的实例
+  if (ClassComponent.contextType) {
+    // 类上有contextType 属性 - 在类的实例上挂在 context
+    classInstance.context = ClassComponent.contextType._currentValue;
+  }
   vdom.classInstance = classInstance; // 在虚拟dom上挂在一个属性，指向类组件的实例，组件卸载的时候可以执行实例上的卸载方法
   if (ref) ref.current = classInstance; // 组件卸载值为空
 
@@ -64,17 +75,19 @@ function mountForwardComponent(vdom) {
 function createDOM(vdom) {
   let { type, props, ref } = vdom;
   let dom;
-  if (type && type.$$typeof === REACT_FORWARD_REF) {
+  if (type && type.$$typeof === REACT_PROVIDER) {
+    return mountProviderComponent(vdom);
+  } else if (type && type.$$typeof === REACT_CONTEXT) {
+    return mountContextComponent(vdom);
+  } else if (type && type.$$typeof === REACT_FORWARD_REF) {
     return mountForwardComponent(vdom);
-  }
-  if (type === REACT_TEXT) {
+  } else if (type === REACT_TEXT) {
     // 文本节点
     dom = document.createTextNode(props.content);
   } else if (typeof type === "string") {
     // DOM 节点
     dom = document.createElement(type);
   } else if (typeof type === "function") {
-    //
     if (type.isReactComponent) {
       // 类组件
       return mountClassComponent(vdom);
@@ -98,6 +111,21 @@ function createDOM(vdom) {
   vdom.dom = dom; // 在虚拟dom上挂一个dom属性指向虚拟对应的真实dom
   if (ref) ref.current = dom; // ref有值 ref的current属性指向真实dom
   return dom;
+}
+function mountProviderComponent(vdom) {
+  let { type, props } = vdom;
+  let context = type._context;
+  context._currentValue = props.value;
+  let renderVdom = props.children; // 对Provider 而言，它要渲染的其实是他的儿子
+  vdom.oldRenderVdom = renderVdom; // 这一步是为了后面更新用的
+  return createDOM(renderVdom);
+}
+function mountContextComponent(vdom) {
+  let { type, props } = vdom;
+  let context = type._context;
+  let renderVdom = props.children(context._currentValue);
+  vdom.oldRenderVdom = renderVdom;
+  return createDOM(renderVdom);
 }
 
 function reconcileChildren(children, parentDOM) {
@@ -168,7 +196,11 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
 }
 
 function updateElement(oldVdom, newVdom) {
-  if (oldVdom.type === REACT_TEXT && newVdom.type === REACT_TEXT) {
+  if (oldVdom.type.$$typeof === REACT_CONTEXT) {
+    updateContextComponent(oldVdom, newVdom);
+  } else if (oldVdom.type.$$typeof === REACT_PROVIDER) {
+    updateProviderComponent(oldVdom, newVdom);
+  } else if (oldVdom.type === REACT_TEXT && newVdom.type === REACT_TEXT) {
     // 新老节点都是文本节点，复用老的文本节点
     let currentDOM = (newVdom.dom = findDOM(oldVdom));
     currentDOM.textContent = newVdom.props.content;
@@ -188,6 +220,25 @@ function updateElement(oldVdom, newVdom) {
       updateFunctionComponent(oldVdom, newVdom);
     }
   }
+}
+function updateContextComponent(oldVdom, newVdom) {
+  let oldDOM = findDOM(oldVdom); // 老的dom
+  let parentDOM = oldDOM.parentNode; // 父dom
+  let { type, props } = newVdom;
+  let context = type._context;
+  let renderVdom = props.children(context._currentValue);
+  compareTwoVdom(parentDOM, oldVdom.oldRenderVdom, renderVdom);
+  newVdom.oldRenderVdom = renderVdom;
+}
+function updateProviderComponent(oldVdom, newVdom) {
+  let oldDOM = findDOM(oldVdom); // 老的dom
+  let parentDOM = oldDOM.parentNode; // 父dom
+  let { type, props } = newVdom;
+  let context = type._context;
+  context._currentValue = props.value; // 使用新的属性赋给_currentValue
+  let renderVdom = props.children;
+  compareTwoVdom(parentDOM, oldVdom.oldRenderVdom, renderVdom);
+  newVdom.oldRenderVdom = renderVdom;
 }
 
 /**
