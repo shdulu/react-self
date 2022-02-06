@@ -10,7 +10,6 @@ import React from "../react";
  * 
  * 可以拦截生命周期 和渲染的过程
  * 
- * @class Hello
  * @extends {React.Component}
  */
 
