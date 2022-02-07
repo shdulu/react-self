@@ -5,6 +5,7 @@ import {
   PLACEMENT,
   REACT_PROVIDER,
   REACT_CONTEXT,
+  REACT_MEMO,
 } from "./constants";
 import { addEvent } from "./event";
 
@@ -74,8 +75,11 @@ function mountForwardComponent(vdom) {
  */
 function createDOM(vdom) {
   let { type, props, ref } = vdom;
+  debugger
   let dom;
-  if (type && type.$$typeof === REACT_PROVIDER) {
+  if (type && type.$$typeof === REACT_MEMO) {
+    mountMemoComponent(vdom);
+  } else if (type && type.$$typeof === REACT_PROVIDER) {
     return mountProviderComponent(vdom);
   } else if (type && type.$$typeof === REACT_CONTEXT) {
     return mountContextComponent(vdom);
@@ -111,6 +115,13 @@ function createDOM(vdom) {
   vdom.dom = dom; // 在虚拟dom上挂一个dom属性指向虚拟对应的真实dom
   if (ref) ref.current = dom; // ref有值 ref的current属性指向真实dom
   return dom;
+}
+function mountMemoComponent(vdom) {
+  let { type, props } = vdom; // type是 memo 返回的对象
+  let renderVdom = type.type(props);
+  vdom.prevProps = props; // 记录一下老的属性对象，方便更新的时候对比
+  vdom.oldRenderVdom = renderVdom;
+  return createDOM(renderVdom);
 }
 function mountProviderComponent(vdom) {
   let { type, props } = vdom;
@@ -196,7 +207,9 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
 }
 
 function updateElement(oldVdom, newVdom) {
-  if (oldVdom.type.$$typeof === REACT_CONTEXT) {
+  if (oldVdom.type.$$typeof === REACT_MEMO) {
+    updateMemoComponent(oldVdom, newVdom);
+  } else if (oldVdom.type.$$typeof === REACT_CONTEXT) {
     updateContextComponent(oldVdom, newVdom);
   } else if (oldVdom.type.$$typeof === REACT_PROVIDER) {
     updateProviderComponent(oldVdom, newVdom);
@@ -229,6 +242,23 @@ function updateContextComponent(oldVdom, newVdom) {
   let renderVdom = props.children(context._currentValue);
   compareTwoVdom(parentDOM, oldVdom.oldRenderVdom, renderVdom);
   newVdom.oldRenderVdom = renderVdom;
+}
+function updateMemoComponent(oldVdom, newVdom) {
+  let { type, prevProps } = oldVdom;
+  if (!type.compare(prevProps, newVdom.props)) {
+    // 如果新老属性比较后是不相等的，进入更新逻辑
+    let oldDOM = findDOM(oldVdom); // 老的真实dom
+    let parentDOM = oldDOM.parentNode;
+    let { type, props } = newVdom;
+    let renderVdom = type.type(props);
+    compareTwoVdom(parentDOM, oldVdom.oldRenderVdom, renderVdom);
+    newVdom.prevProps = props;
+    newVdom.oldRenderVdom = renderVdom;
+  } else {
+    // 如果相等跳过更新，直接赋值
+    newVdom.prevProps = prevProps;
+    newVdom.oldRenderVdom = oldVdom.oldRenderVdom;
+  }
 }
 function updateProviderComponent(oldVdom, newVdom) {
   let oldDOM = findDOM(oldVdom); // 老的dom
@@ -271,12 +301,17 @@ function updateFunctionComponent(oldVdom, newVdom) {
 }
 
 function updateChildren(parentDOM, oldVChildren, newVChildren) {
-  oldVChildren = Array.isArray(oldVChildren) ? oldVChildren : [oldVChildren];
-  newVChildren = Array.isArray(newVChildren) ? newVChildren : [newVChildren];
+  oldVChildren = (
+    Array.isArray(oldVChildren) ? oldVChildren : [oldVChildren]
+  ).filter((item) => item);
+  newVChildren = (
+    Array.isArray(newVChildren) ? newVChildren : [newVChildren]
+  ).filter((item) => item);
   //第一步： 构建老虚拟DOM的Map， key是虚拟dom的key，值是虚拟dom
   let keyedOldMap = {};
   // 同级 - 遍历老的虚拟DOM列表 - 映射Map
   oldVChildren.forEach((oldVChild, index) => {
+    // debugger;
     let oldKey = oldVChild.key ? oldVChild.key : index;
     keyedOldMap[oldKey] = oldVChild;
   });

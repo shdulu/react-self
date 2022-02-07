@@ -2,9 +2,10 @@ import {
   REACT_CONTEXT,
   REACT_ELEMENT,
   REACT_FORWARD_REF,
+  REACT_MEMO,
   REACT_PROVIDER,
 } from "./constants";
-import { wrapToVdom } from "./utils";
+import { wrapToVdom, shallowEqual } from "./utils";
 import { Component } from "./Component";
 
 function createElement(type, config, children) {
@@ -53,7 +54,7 @@ function forwardRef(render) {
 function createContext() {
   let context = {
     $$typeof: REACT_CONTEXT,
-    _currentValue: undefined
+    _currentValue: undefined,
   };
   context.Provider = {
     $$typeof: REACT_PROVIDER,
@@ -65,7 +66,7 @@ function createContext() {
   };
   return context;
 }
-function cloneElement (oldElement, props, children) {
+function cloneElement(oldElement, props, children) {
   if (arguments.length > 3) {
     // 如果参数的长度大于 3， 多个儿子
     props.children = Array.prototype.slice.call(arguments, 2).map(wrapToVdom);
@@ -74,8 +75,29 @@ function cloneElement (oldElement, props, children) {
   }
   return {
     ...oldElement,
-    props
+    props,
   };
+}
+/**
+ * 返回一个对象
+ *
+ */
+function memo(type, compare = shallowEqual) {
+  return {
+    $$typeof: REACT_MEMO,
+    compare, // 用来比较新旧属性差异， 判断新老属性是否相同
+    type,
+  };
+}
+class PureComponent extends Component {
+  // 继承父组件，重写父组件方法
+  shouldComponentUpdate(nextProps, nextState) {
+    // 如果props或者state不相等返回true
+    return (
+      !shallowEqual(this.props, nextProps) ||
+      !shallowEqual(this.state, nextState)
+    );
+  }
 }
 
 const React = {
@@ -85,6 +107,8 @@ const React = {
   forwardRef,
   createContext,
   cloneElement,
+  memo,
+  PureComponent,
 };
 
 export default React;
