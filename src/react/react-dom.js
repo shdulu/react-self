@@ -22,8 +22,8 @@ function mount(vdom, parentDOM) {
   // 1. 把虚拟DOM变成真实DOM
   let newDOM = createDOM(vdom);
   // 2. 把真实DOM追加到容器上
-  parentDOM.appendChild(newDOM);
-  if (newDOM.componentDidMount) {
+  if (newDOM) parentDOM.appendChild(newDOM);
+  if (newDOM && newDOM.componentDidMount) {
     newDOM.componentDidMount();
   }
 }
@@ -36,6 +36,7 @@ function mountFunctionComponent(vdom) {
   let { type: functionComponent, props } = vdom;
   let renderVdom = functionComponent(props); // 执行函数 - 获取组件将要渲染的虚拟dom
   vdom.oldRenderVdom = renderVdom;
+  if (!renderVdom) return null;
   return createDOM(renderVdom);
 }
 
@@ -55,7 +56,8 @@ function mountClassComponent(vdom) {
   }
   let renderVdom = classInstance.render();
   vdom.oldRenderVdom = classInstance.oldRenderVdom = renderVdom;
-  let dom = createDOM(renderVdom);
+  if (!renderVdom) return null;
+  let dom = createDOM(renderVdom); // TODO
   if (classInstance.componentDidMount) {
     dom.componentDidMount = classInstance.componentDidMount.bind(classInstance);
   }
@@ -65,6 +67,7 @@ function mountClassComponent(vdom) {
 function mountForwardComponent(vdom) {
   let { type, ref, props } = vdom;
   let renderVdom = type.render(props, ref);
+  if (!renderVdom) return null;
   return createDOM(renderVdom);
 }
 
@@ -75,7 +78,6 @@ function mountForwardComponent(vdom) {
  */
 function createDOM(vdom) {
   let { type, props, ref } = vdom;
-  debugger
   let dom;
   if (type && type.$$typeof === REACT_MEMO) {
     mountMemoComponent(vdom);
@@ -121,6 +123,7 @@ function mountMemoComponent(vdom) {
   let renderVdom = type.type(props);
   vdom.prevProps = props; // 记录一下老的属性对象，方便更新的时候对比
   vdom.oldRenderVdom = renderVdom;
+  if (!renderVdom) return null;
   return createDOM(renderVdom);
 }
 function mountProviderComponent(vdom) {
@@ -129,6 +132,7 @@ function mountProviderComponent(vdom) {
   context._currentValue = props.value;
   let renderVdom = props.children; // 对Provider 而言，它要渲染的其实是他的儿子
   vdom.oldRenderVdom = renderVdom; // 这一步是为了后面更新用的
+  if (!renderVdom) return null;
   return createDOM(renderVdom);
 }
 function mountContextComponent(vdom) {
@@ -136,6 +140,7 @@ function mountContextComponent(vdom) {
   let context = type._context;
   let renderVdom = props.children(context._currentValue);
   vdom.oldRenderVdom = renderVdom;
+  if (!renderVdom) return null;
   return createDOM(renderVdom);
 }
 
@@ -311,7 +316,6 @@ function updateChildren(parentDOM, oldVChildren, newVChildren) {
   let keyedOldMap = {};
   // 同级 - 遍历老的虚拟DOM列表 - 映射Map
   oldVChildren.forEach((oldVChild, index) => {
-    // debugger;
     let oldKey = oldVChild.key ? oldVChild.key : index;
     keyedOldMap[oldKey] = oldVChild;
   });
@@ -430,6 +434,7 @@ export function findDOM(vdom) {
 }
 const ReactDOM = {
   render,
+  createPortal: render,
 };
 
 export default ReactDOM;
