@@ -9,6 +9,63 @@ import {
 } from "./constants";
 import { addEvent } from "./event";
 
+// 为了让函数组件使用状态，声明一个数组，存放所有状态
+let hookStates = [];
+// 当前hooks 的索引， 所以 hooks 不能用在if或者for循环中
+let hookIndex = 0;
+let scheduleUpdate;
+
+/**
+ *
+ * 让函数组件可以使用状态
+ * @param {*} initialState 初始状态
+ */
+export function useState(initialState) {
+  // 第一步，把老的值取出来，如果没有，就是用默认值
+  hookStates[hookIndex] = hookStates[hookIndex] || initialState;
+  let currentIndex = hookIndex; // 新定义一个变量
+  function setState(newState) {
+    if (typeof newState === "function") {
+      newState = newState(hookStates[currentIndex]);
+    }
+    hookStates[currentIndex] = newState; // 返回函数通过闭包引用了变量 currentIndex
+    scheduleUpdate(); // 当状态改变后要重新更新应用
+  }
+  return [hookStates[hookIndex++], setState];
+}
+
+export function useMemo(factory, deps) {
+  if (hookStates[hookIndex]) {
+    // 判断一下是否为首次渲染
+    // 如果是更新的时候。也就不是初次渲染
+    let [lastMemo, lastDeps] = hookStates[hookIndex];
+    // 如果来的依赖数组和新的依赖数组完全一样， true 否则false
+    let allTheSame = deps.every((item, index) => item === lastDeps[index]);
+    if (allTheSame) {
+      hookIndex++;
+      return lastMemo;
+    } else {
+      let newMemo = factory();
+      hookStates[hookIndex++] = [newMemo, deps];
+      return newMemo;
+    }
+  } else {
+    let newMemo = factory(); // {number: 0}
+    hookStates[hookIndex++] = [newMemo, deps];
+    return newMemo;
+  }
+}
+
+export function useCallback(callback, deps) {
+  if (hookStates[hookIndex]) {
+    // 判断一下是否为首次渲染
+    // 如果是更新的时候。也就不是初次渲染
+  } else {
+    hookStates[hookIndex++] = [callback, deps];
+    return callback;
+  }
+}
+
 /**
  *
  * @param {*} vdom React.createElement 返回的虚拟DOM对象 也就是 React 元素
@@ -16,6 +73,11 @@ import { addEvent } from "./event";
  */
 function render(vdom, container) {
   mount(vdom, container);
+  scheduleUpdate = () => {
+    hookIndex = 0; // 在状态修改后，调度更新的时候，索引重置为0
+    // 每次更新都要从根节点开始 DOM DIFF
+    compareTwoVdom(container, vdom, vdom);
+  };
 }
 
 function mount(vdom, parentDOM) {
@@ -432,6 +494,7 @@ export function findDOM(vdom) {
     return findDOM(vdom.oldRenderVdom);
   }
 }
+
 const ReactDOM = {
   render,
   createPortal: render,
