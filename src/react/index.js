@@ -7,7 +7,7 @@ import {
 } from "./constants";
 import { wrapToVdom, shallowEqual } from "./utils";
 import { Component } from "./Component";
-import { useState } from "./react-dom";
+import { useState, useMemo, useCallback } from "./react-dom";
 
 function createElement(type, config, children) {
   let ref, key;
@@ -102,6 +102,8 @@ class PureComponent extends Component {
 }
 
 const React = {
+  useCallback,
+  useMemo,
   useState,
   createElement,
   Component,

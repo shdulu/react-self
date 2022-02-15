@@ -58,8 +58,15 @@ export function useMemo(factory, deps) {
 
 export function useCallback(callback, deps) {
   if (hookStates[hookIndex]) {
-    // 判断一下是否为首次渲染
-    // 如果是更新的时候。也就不是初次渲染
+    let [lastCallback, lastDeps] = hookStates[hookIndex]
+    let allTheSame =deps.every((item, index) => item === lastDeps[index])
+    if(allTheSame) {
+      hookIndex++
+      return lastCallback
+    } else {
+      hookStates[hookIndex++] = [callback, deps]
+      return callback
+    }
   } else {
     hookStates[hookIndex++] = [callback, deps];
     return callback;
@@ -142,7 +149,7 @@ function createDOM(vdom) {
   let { type, props, ref } = vdom;
   let dom;
   if (type && type.$$typeof === REACT_MEMO) {
-    mountMemoComponent(vdom);
+    return mountMemoComponent(vdom);
   } else if (type && type.$$typeof === REACT_PROVIDER) {
     return mountProviderComponent(vdom);
   } else if (type && type.$$typeof === REACT_CONTEXT) {

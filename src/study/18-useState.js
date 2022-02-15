@@ -8,7 +8,7 @@ import React from "../react";
  */
 function Child({ data, handleClick }) {
   console.log("Child render");
-  return <button onClick={handleClick}>{data.number}</button>;
+  return <button onClick={handleClick}>{data.number}wwwww</button>;
 }
 let MemoChild = React.memo(Child);
 function App() {
