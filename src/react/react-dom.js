@@ -83,6 +83,9 @@ export function useCallback(callback, deps) {
     return callback;
   }
 }
+export function useContext(context) {
+  return context._currentValue;
+}
 
 /**
  *
