@@ -22,18 +22,29 @@ let scheduleUpdate;
  */
 export function useState(initialState) {
   // 第一步，把老的值取出来，如果没有，就是用默认值
-  hookStates[hookIndex] = hookStates[hookIndex] || initialState;
-  let currentIndex = hookIndex; // 新定义一个变量
-  function setState(newState) {
-    if (typeof newState === "function") {
-      newState = newState(hookStates[currentIndex]);
-    }
-    hookStates[currentIndex] = newState; // 返回函数通过闭包引用了变量 currentIndex
-    scheduleUpdate(); // 当状态改变后要重新更新应用
-  }
-  return [hookStates[hookIndex++], setState];
+  // hookStates[hookIndex] = hookStates[hookIndex] || initialState;
+  // let currentIndex = hookIndex; // 新定义一个变量
+  // function setState(newState) {
+  //   if (typeof newState === "function") {
+  //     newState = newState(hookStates[currentIndex]);
+  //   }
+  //   hookStates[currentIndex] = newState; // 返回函数通过闭包引用了变量 currentIndex
+  //   scheduleUpdate(); // 当状态改变后要重新更新应用
+  // }
+  // return [hookStates[hookIndex++], setState];
+  return useReducer(null, initialState);
 }
-
+export function useReducer(reducer, initialState) {
+  hookStates[hookIndex] = hookStates[hookIndex] || initialState;
+  let currentIndex = hookIndex;
+  function dispatch(action) {
+    hookStates[currentIndex] = reducer
+      ? reducer(hookStates[currentIndex], action)
+      : action;
+    scheduleUpdate();
+  }
+  return [hookStates[hookIndex++], dispatch];
+}
 export function useMemo(factory, deps) {
   if (hookStates[hookIndex]) {
     // 判断一下是否为首次渲染
@@ -58,14 +69,14 @@ export function useMemo(factory, deps) {
 
 export function useCallback(callback, deps) {
   if (hookStates[hookIndex]) {
-    let [lastCallback, lastDeps] = hookStates[hookIndex]
-    let allTheSame =deps.every((item, index) => item === lastDeps[index])
-    if(allTheSame) {
-      hookIndex++
-      return lastCallback
+    let [lastCallback, lastDeps] = hookStates[hookIndex];
+    let allTheSame = deps.every((item, index) => item === lastDeps[index]);
+    if (allTheSame) {
+      hookIndex++;
+      return lastCallback;
     } else {
-      hookStates[hookIndex++] = [callback, deps]
-      return callback
+      hookStates[hookIndex++] = [callback, deps];
+      return callback;
     }
   } else {
     hookStates[hookIndex++] = [callback, deps];
