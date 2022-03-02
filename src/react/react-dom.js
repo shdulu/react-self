@@ -38,6 +38,9 @@ export function useReducer(reducer, initialState) {
   hookStates[hookIndex] = hookStates[hookIndex] || initialState;
   let currentIndex = hookIndex;
   function dispatch(action) {
+    if(typeof action === 'function') {
+      action = action(hookStates[currentIndex])
+    }
     hookStates[currentIndex] = reducer
       ? reducer(hookStates[currentIndex], action)
       : action;
@@ -87,6 +90,58 @@ export function useContext(context) {
   return context._currentValue;
 }
 
+export function useRef() {
+  return {
+    current: null
+  }
+}
+
+export function useEffect(callback, deps) {
+  let currentIndex = hookIndex;
+  if (hookStates[hookIndex]) {
+    let [destroy, lastDeps] = hookStates[hookIndex];
+    let allTheSame =
+      deps && deps.every((item, index) => item === lastDeps[index]);
+    if (allTheSame) {
+      hookIndex++;
+    } else {
+      destroy && destroy(); // 执行上一个销毁函数
+      setTimeout(() => {
+        hookStates[currentIndex] = [callback(), deps];
+      });
+      hookIndex++;
+    }
+  } else {
+    // 因为useEffect 需要延迟执行，所以需要包装成一个宏任务
+    setTimeout(() => {
+      hookStates[currentIndex] = [callback(), deps];
+    });
+    hookIndex++;
+  }
+}
+export function useLayoutEffect(callback, deps) {
+  let currentIndex = hookIndex;
+  if (hookStates[hookIndex]) {
+    let [destroy, lastDeps] = hookStates[hookIndex];
+    let allTheSame =
+      deps && deps.every((item, index) => item === lastDeps[index]);
+    if (allTheSame) {
+      hookIndex++;
+    } else {
+      destroy && destroy(); // 执行上一个销毁函数
+      queueMicrotask(() => {
+        hookStates[currentIndex] = [callback(), deps];
+      });
+      hookIndex++;
+    }
+  } else {
+    // 因为useEffect 需要延迟执行，所以需要包装成一个宏任务
+    queueMicrotask(() => {
+      hookStates[currentIndex] = [callback(), deps];
+    });
+    hookIndex++;
+  }
+}
 /**
  *
  * @param {*} vdom React.createElement 返回的虚拟DOM对象 也就是 React 元素
@@ -295,13 +350,17 @@ export function compareTwoVdom(parentDOM, oldVdom, newVdom, nextDOM) {
 }
 
 function updateElement(oldVdom, newVdom) {
-  if (oldVdom.type.$$typeof === REACT_MEMO) {
+  if (oldVdom.type && oldVdom.type.$$typeof === REACT_MEMO) {
     updateMemoComponent(oldVdom, newVdom);
-  } else if (oldVdom.type.$$typeof === REACT_CONTEXT) {
+  } else if (oldVdom.type && oldVdom.type.$$typeof === REACT_CONTEXT) {
     updateContextComponent(oldVdom, newVdom);
-  } else if (oldVdom.type.$$typeof === REACT_PROVIDER) {
+  } else if (oldVdom.type && oldVdom.type.$$typeof === REACT_PROVIDER) {
     updateProviderComponent(oldVdom, newVdom);
-  } else if (oldVdom.type === REACT_TEXT && newVdom.type === REACT_TEXT) {
+  } else if (
+    oldVdom.type &&
+    oldVdom.type === REACT_TEXT &&
+    newVdom.type === REACT_TEXT
+  ) {
     // 新老节点都是文本节点，复用老的文本节点
     let currentDOM = (newVdom.dom = findDOM(oldVdom));
     currentDOM.textContent = newVdom.props.content;

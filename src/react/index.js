@@ -13,6 +13,9 @@ import {
   useCallback,
   useReducer,
   useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef
 } from "./react-dom";
 
 function createElement(type, config, children) {
@@ -108,6 +111,9 @@ class PureComponent extends Component {
 }
 
 const React = {
+  useRef,
+  useLayoutEffect,
+  useEffect,
   useContext,
   useReducer,
   useCallback,
