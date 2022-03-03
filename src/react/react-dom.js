@@ -21,25 +21,14 @@ let scheduleUpdate;
  * @param {*} initialState 初始状态
  */
 export function useState(initialState) {
-  // 第一步，把老的值取出来，如果没有，就是用默认值
-  // hookStates[hookIndex] = hookStates[hookIndex] || initialState;
-  // let currentIndex = hookIndex; // 新定义一个变量
-  // function setState(newState) {
-  //   if (typeof newState === "function") {
-  //     newState = newState(hookStates[currentIndex]);
-  //   }
-  //   hookStates[currentIndex] = newState; // 返回函数通过闭包引用了变量 currentIndex
-  //   scheduleUpdate(); // 当状态改变后要重新更新应用
-  // }
-  // return [hookStates[hookIndex++], setState];
   return useReducer(null, initialState);
 }
 export function useReducer(reducer, initialState) {
   hookStates[hookIndex] = hookStates[hookIndex] || initialState;
   let currentIndex = hookIndex;
   function dispatch(action) {
-    if(typeof action === 'function') {
-      action = action(hookStates[currentIndex])
+    if (typeof action === "function") {
+      action = action(hookStates[currentIndex]);
     }
     hookStates[currentIndex] = reducer
       ? reducer(hookStates[currentIndex], action)
@@ -92,8 +81,8 @@ export function useContext(context) {
 
 export function useRef() {
   return {
-    current: null
-  }
+    current: null,
+  };
 }
 
 export function useEffect(callback, deps) {
@@ -141,6 +130,9 @@ export function useLayoutEffect(callback, deps) {
     });
     hookIndex++;
   }
+}
+export function useImperativeHandle(ref, factory) {
+  ref.current = factory();
 }
 /**
  *

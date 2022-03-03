@@ -15,7 +15,8 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
-  useRef
+  useRef,
+  useImperativeHandle
 } from "./react-dom";
 
 function createElement(type, config, children) {
@@ -111,6 +112,7 @@ class PureComponent extends Component {
 }
 
 const React = {
+  useImperativeHandle,
   useRef,
   useLayoutEffect,
   useEffect,
