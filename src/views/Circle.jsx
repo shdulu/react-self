@@ -1,5 +1,8 @@
 import React from "react";
+import useAnimation from "../../achieve/hooks/useAnimation";
+import "./Circle.css";
 const Circle = () => {
-  return <div> this is Circle</div>;
+  const [className, start] = useAnimation("circle", "active");
+  return <div className={className} onClick={start}></div>;
 };
 export default Circle;
