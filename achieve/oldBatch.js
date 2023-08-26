@@ -26,10 +26,12 @@ const handleChick = () => {
 function batchedUpdate(fn) {
   isBatchingUpdate = true; // 进入批量模式
   fn();
+  debugger
   isBatchingUpdate = false; // 推出批量更新模式
   updateQueue.forEach((newState) => {
     state = newState;
   });
   updateQueue.length = 0;
 }
+debugger
 batchedUpdate(handleChick);

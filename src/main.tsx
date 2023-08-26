@@ -1,15 +1,8 @@
 import React from "react";
-// import ReactDOM from "react-dom";
 import { createRoot } from "react-dom/client";
+import "bootstrap/dist/css/bootstrap.css";
 
-import OldBatchUpdatePage from "./routes/OldBatchUpdatePage.jsx";
-import NewBatchUpdatePage from "./routes/NewBatchUpdatePage.jsx";
+import App from "./App";
 
-// import ReactDOM, { createRoot } from "react-dom";
-
-const element = <NewBatchUpdatePage />;
-
-// legacy模式ReactDOM.renders会同步渲染
-// ReactDOM.render(element, document.getElementById("root"));
-// createRoot会启用concurrent并发模式
-createRoot(document.getElementById("root")!).render(element);
+const root = createRoot(document.getElementById("root")!);
+root.render(<App/>);
